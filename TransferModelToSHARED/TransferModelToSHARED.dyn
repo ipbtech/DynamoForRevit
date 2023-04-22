@@ -1,0 +1,556 @@
+{
+  "Uuid": "82c0f37d-2514-45e7-b590-5f744372d088",
+  "IsCustomNode": false,
+  "Description": null,
+  "Name": "model_to_sharedZone",
+  "ElementResolver": {
+    "ResolutionMap": {
+      "String": {
+        "Key": "DSCore.String",
+        "Value": "DSCoreNodes.dll"
+      }
+    }
+  },
+  "Inputs": [
+    {
+      "Id": "6875c036f041498a99ab9d739a1d4af6",
+      "Name": "Путь сохранения текущего файла",
+      "Type": "string",
+      "Value": "C:\\Users\\user\\Desktop\\RevitTestCopyGoal",
+      "Description": "Позволяет выбрать папку в системе и получить путь к ней"
+    }
+  ],
+  "Outputs": [],
+  "Nodes": [
+    {
+      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
+      "NodeType": "PythonScriptNode",
+      "Code": "import clr\r\nclr.AddReference('RevitAPI') # Основная библиотека Revit API\r\nfrom Autodesk.Revit.DB import *\r\n\r\nclr.AddReference(\"RevitServices\")\r\nfrom RevitServices.Persistence import DocumentManager as DM\r\n\r\ndoc = DM.Instance.CurrentDBDocument\r\npath_doc = doc.PathName\r\nbfi = BasicFileInfo.Extract(path_doc)\r\n\r\n\r\n\"\"\" Через Username. Работает только на лицензионных версиях\r\nif doc.IsWorkshared:\r\n\tusername = bfi.Username\r\n\tz = path_doc.rfind(\"\\\\\") + 1\r\n\tfile_name = path_doc[z:len(path_doc)]\r\n\tfile_name_edit = file_name.replace((\"_\" + username), \"\")\r\n\tfile_path = path_doc[0:z]\r\n\tOUT = path_doc, file_name_edit\r\n\"\"\"\r\n\r\nif doc.IsWorkshared:\r\n\tz = bfi.CentralPath.rfind(\"\\\\\") + 1\r\n\tfile_name = bfi.CentralPath[z:len(bfi.CentralPath)]\r\n\tOUT =  bfi.CentralPath, file_name\r\nelse: \r\n\tz = path_doc.rfind(\"\\\\\") + 1\r\n\tfile_name = path_doc[z:len(path_doc)]\t\r\n\tOUT = path_doc, file_name\r\n",
+      "VariableInputPorts": true,
+      "Id": "cd6107cc338b42da8f0f03872467abb3",
+      "Inputs": [
+        {
+          "Id": "b9ff6e7ab4d44418b486ee08cbd87bda",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "fad18068d2a746c49bdcaecb020aeee9",
+          "Name": "OUT",
+          "Description": "Результат сценария Python",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Выполнение встроенного сценария IronPython."
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.ZeroTouch.DSFunction, DynamoCore",
+      "NodeType": "FunctionNode",
+      "FunctionSignature": "DSCore.IO.FileSystem.CopyFile@var,string,bool",
+      "Id": "82026afe489247ae9edb440e72d041e8",
+      "Inputs": [
+        {
+          "Id": "cdb9593a962149d29f9ccf001c9d94e5",
+          "Name": "file",
+          "Description": "var",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "7cb24c1cc10746c4ac0c035424776f57",
+          "Name": "destinationPath",
+          "Description": "string",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "7a45e851d4ed43f3adf9d4a3b4d01322",
+          "Name": "overwrite",
+          "Description": "bool\nЗначение по умолчанию : false",
+          "UsingDefaultValue": true,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "fe68ae2b7bfe4a75af84ff4847f69103",
+          "Name": "void",
+          "Description": "void",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Auto",
+      "Description": "Копирование файла.\n\nFileSystem.CopyFile (file: var, destinationPath: string, overwrite: bool = false): void"
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Input.Directory, CoreNodeModels",
+      "HintPath": "C:\\Users\\user\\Desktop\\RevitTestCopyGoal",
+      "InputValue": "C:\\Users\\user\\Desktop\\RevitTestCopyGoal",
+      "NodeType": "ExtensionNode",
+      "Id": "6875c036f041498a99ab9d739a1d4af6",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "0b0f3fa0280645e2ae7aa14cbd9badb8",
+          "Name": "",
+          "Description": "Directory",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Позволяет выбрать папку в системе и получить путь к ней"
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Input.FileObject, CoreNodeModels",
+      "NodeType": "ExtensionNode",
+      "Id": "d45bae6166f540ce94d19b38743e996b",
+      "Inputs": [
+        {
+          "Id": "eb87e8e81f5c431dbc197a965f23fc9c",
+          "Name": "path",
+          "Description": "Путь к файлу.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "f5406052390d4b8f8a117f8d22bf6be9",
+          "Name": "file",
+          "Description": "Файловый объект",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Создание нового объекта на основе пути."
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.CodeBlockNodeModel, DynamoCore",
+      "NodeType": "CodeBlockNode",
+      "Code": "a+\"\\\\\"+b;",
+      "Id": "363118d9e0144f27bd9fbb5a67b6a1cd",
+      "Inputs": [
+        {
+          "Id": "594830a6394b4ee5b9e08826d99df9c6",
+          "Name": "a",
+          "Description": "a",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "58a999518a4a42ea8ec34876c81d141f",
+          "Name": "b",
+          "Description": "b",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "c501e6bab9484fe2b99efb58da3709ce",
+          "Name": "",
+          "Description": "Значение выражения в строке 1",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Обеспечивает возможность непосредственного авторства кода DesignScript"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.CodeBlockNodeModel, DynamoCore",
+      "NodeType": "CodeBlockNode",
+      "Code": "a[0];\na[1];",
+      "Id": "ec9cd1e3f8b64614bec6b5b6e44ee6ef",
+      "Inputs": [
+        {
+          "Id": "ff1685fbb8bf4942ae1b8647d8727f09",
+          "Name": "a",
+          "Description": "a",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "05acb7855a9d424ab67a138555498696",
+          "Name": "",
+          "Description": "Значение выражения в строке 1",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "324aa8a2bf704708a4ee5acbb7fd79b2",
+          "Name": "",
+          "Description": "Значение выражения в строке 2",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Обеспечивает возможность непосредственного авторства кода DesignScript"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.CodeBlockNodeModel, DynamoCore",
+      "NodeType": "CodeBlockNode",
+      "Code": "true;",
+      "Id": "42dd39e90bfb4aef908a2ad5c71e7b88",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "95b5c791ee1d4d60a0577867bfb8dec7",
+          "Name": "",
+          "Description": "Значение выражения в строке 1",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Обеспечивает возможность непосредственного авторства кода DesignScript"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.ZeroTouch.DSFunction, DynamoCore",
+      "NodeType": "FunctionNode",
+      "FunctionSignature": "DSCore.IO.FileSystem.GetDirectoryContents@var,string,bool",
+      "Id": "6e80ab2147174f88a3d11d03dc1e3ac9",
+      "Inputs": [
+        {
+          "Id": "59351d2b1489453291a744f9af973a74",
+          "Name": "directory",
+          "Description": "var",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "3a89fbc400f94cb9b5ee7dcc74cf28c7",
+          "Name": "searchString",
+          "Description": "string\nЗначение по умолчанию : \"*.*\"",
+          "UsingDefaultValue": true,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "3d9d957dc7624f2692bc0583674e1f1f",
+          "Name": "includeSubdirectories",
+          "Description": "bool\nЗначение по умолчанию : false",
+          "UsingDefaultValue": true,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "94a0c5db7cb4454a9dfea7a29042c4a8",
+          "Name": "files",
+          "Description": "var",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "17446b6dfa174bf5a5dc0bb6a75108f5",
+          "Name": "directories",
+          "Description": "var",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Auto",
+      "Description": "FileSystem.GetDirectoryContents (directory: var, searchString: string = \"*.*\", includeSubdirectories: bool = false): var[]..[]"
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Input.DirectoryObject, CoreNodeModels",
+      "NodeType": "ExtensionNode",
+      "Id": "ed1c1659041f429eb357b87f425eb15b",
+      "Inputs": [
+        {
+          "Id": "c6ce7261e8f144499c5dd9d37827d9d5",
+          "Name": "path",
+          "Description": "Путь к папке.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "5bd0b6814c424b34b507928a95939e62",
+          "Name": "directory",
+          "Description": "Папка объекта.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Создание объекта каталога на основе пути"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.ZeroTouch.DSFunction, DynamoCore",
+      "NodeType": "FunctionNode",
+      "FunctionSignature": "DSCore.DateTime.Today",
+      "Id": "8441b65870b9406ebd4f24fdb68d2612",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "9a92b5cde7744a3bbce808ed28cc942d",
+          "Name": "dateTime",
+          "Description": "DateTime",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Auto",
+      "Description": "Текущая дата в системе и время, установленное на полночь.\n\nDateTime.Today: var"
+    }
+  ],
+  "Connectors": [
+    {
+      "Start": "fad18068d2a746c49bdcaecb020aeee9",
+      "End": "ff1685fbb8bf4942ae1b8647d8727f09",
+      "Id": "413cce1598d344b1bed4daa67f73b19f"
+    },
+    {
+      "Start": "0b0f3fa0280645e2ae7aa14cbd9badb8",
+      "End": "594830a6394b4ee5b9e08826d99df9c6",
+      "Id": "eab719af24ef40a4a4f01c40eb30dd5d"
+    },
+    {
+      "Start": "0b0f3fa0280645e2ae7aa14cbd9badb8",
+      "End": "c6ce7261e8f144499c5dd9d37827d9d5",
+      "Id": "060ceeb060e24c05a286e23de76efaa1"
+    },
+    {
+      "Start": "f5406052390d4b8f8a117f8d22bf6be9",
+      "End": "cdb9593a962149d29f9ccf001c9d94e5",
+      "Id": "56a45920013845d7a3278fdd01b27aa2"
+    },
+    {
+      "Start": "c501e6bab9484fe2b99efb58da3709ce",
+      "End": "7cb24c1cc10746c4ac0c035424776f57",
+      "Id": "755f9812a436480b9ab693fd2a5d728c"
+    },
+    {
+      "Start": "05acb7855a9d424ab67a138555498696",
+      "End": "eb87e8e81f5c431dbc197a965f23fc9c",
+      "Id": "78a4bc668f3543738b640ec087cf6285"
+    },
+    {
+      "Start": "324aa8a2bf704708a4ee5acbb7fd79b2",
+      "End": "58a999518a4a42ea8ec34876c81d141f",
+      "Id": "0f6bbbecfb4f4d35a46c986674c9f354"
+    },
+    {
+      "Start": "95b5c791ee1d4d60a0577867bfb8dec7",
+      "End": "7a45e851d4ed43f3adf9d4a3b4d01322",
+      "Id": "d8c3f18fb7d34a9099d4a50e0d303d55"
+    },
+    {
+      "Start": "5bd0b6814c424b34b507928a95939e62",
+      "End": "59351d2b1489453291a744f9af973a74",
+      "Id": "68807603860f49eb9050ef218c01d9f0"
+    }
+  ],
+  "Dependencies": [],
+  "NodeLibraryDependencies": [],
+  "Bindings": [],
+  "View": {
+    "Dynamo": {
+      "ScaleFactor": 1.0,
+      "HasRunWithoutCrash": true,
+      "IsVisibleInDynamoLibrary": true,
+      "Version": "2.3.1.11775",
+      "RunType": "Manual",
+      "RunPeriod": "1000"
+    },
+    "Camera": {
+      "Name": "Фоновый просмотр",
+      "EyeX": -73960.246959954748,
+      "EyeY": 80129.184206617647,
+      "EyeZ": 357442.3603064476,
+      "LookX": 73955.246959954748,
+      "LookY": -80118.184206617647,
+      "LookZ": -357450.3603064476,
+      "UpX": 0.0,
+      "UpY": 1.0,
+      "UpZ": 0.0
+    },
+    "NodeViews": [
+      {
+        "ShowGeometry": true,
+        "Name": "ipb_tech.script",
+        "Id": "cd6107cc338b42da8f0f03872467abb3",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": -307.80446239624769,
+        "Y": 943.88709071649362
+      },
+      {
+        "ShowGeometry": true,
+        "Name": "FileSystem.CopyFile",
+        "Id": "82026afe489247ae9edb440e72d041e8",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 187.93867478578716,
+        "Y": 1013.0365989814786
+      },
+      {
+        "ShowGeometry": true,
+        "Name": "Путь сохранения текущего файла",
+        "Id": "6875c036f041498a99ab9d739a1d4af6",
+        "IsSetAsInput": true,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": -342.60766924316692,
+        "Y": 1114.7472582758437
+      },
+      {
+        "ShowGeometry": true,
+        "Name": "File From Path",
+        "Id": "d45bae6166f540ce94d19b38743e996b",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 11.052675056305702,
+        "Y": 943.87283806724452
+      },
+      {
+        "ShowGeometry": true,
+        "Name": "Code Block",
+        "Id": "363118d9e0144f27bd9fbb5a67b6a1cd",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 3.2726197913364103,
+        "Y": 1042.1707041556817
+      },
+      {
+        "ShowGeometry": true,
+        "Name": "Code Block",
+        "Id": "ec9cd1e3f8b64614bec6b5b6e44ee6ef",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": -120.04447206195073,
+        "Y": 946.22720856532067
+      },
+      {
+        "ShowGeometry": true,
+        "Name": "Code Block",
+        "Id": "42dd39e90bfb4aef908a2ad5c71e7b88",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 44.203703861719305,
+        "Y": 1136.6681479838121
+      },
+      {
+        "ShowGeometry": true,
+        "Name": "FileSystem.GetDirectoryContents",
+        "Id": "6e80ab2147174f88a3d11d03dc1e3ac9",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 193.18201602194188,
+        "Y": 1345.459209248171
+      },
+      {
+        "ShowGeometry": true,
+        "Name": "Directory From Path",
+        "Id": "ed1c1659041f429eb357b87f425eb15b",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": true,
+        "X": 8.499158434521803,
+        "Y": 1295.6077834445887
+      },
+      {
+        "ShowGeometry": true,
+        "Name": "DateTime.Today",
+        "Id": "8441b65870b9406ebd4f24fdb68d2612",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": true,
+        "X": 40.889880697703461,
+        "Y": 1388.5867689351373
+      }
+    ],
+    "Annotations": [
+      {
+        "Id": "d36781fcae964883a398f5064f4e5802",
+        "Title": "Заглушка",
+        "Nodes": [
+          "6e80ab2147174f88a3d11d03dc1e3ac9",
+          "ed1c1659041f429eb357b87f425eb15b",
+          "8441b65870b9406ebd4f24fdb68d2612"
+        ],
+        "Left": -1.500841565478197,
+        "Top": 1242.6077834445887,
+        "Width": 520.68285758742013,
+        "Height": 238.97898549054867,
+        "FontSize": 36.0,
+        "InitialTop": 1295.6077834445887,
+        "InitialHeight": 237.97898549054867,
+        "TextblockHeight": 43.0,
+        "Background": "#FFFFC999"
+      }
+    ],
+    "X": 664.69623591064646,
+    "Y": -836.85248278080826,
+    "Zoom": 1.1022490222008481
+  }
+}
