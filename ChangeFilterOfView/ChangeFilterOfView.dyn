@@ -1,0 +1,187 @@
+{
+  "Uuid": "3270177c-90b7-466b-8002-73b23dd41571",
+  "IsCustomNode": false,
+  "Description": null,
+  "Name": "Настройка фильтров по комплекту",
+  "ElementResolver": {
+    "ResolutionMap": {
+      "Revit.Elements.Element": {
+        "Key": "Revit.Elements.Element",
+        "Value": "RevitNodes.dll"
+      }
+    }
+  },
+  "Inputs": [
+    {
+      "Id": "e844cf2d7cc94106a71f5961863b2be3",
+      "Name": "Введите имя раздела",
+      "Type": "string",
+      "Value": "КЖ6",
+      "Description": "Создание строки."
+    }
+  ],
+  "Outputs": [
+    {
+      "Id": "ecf80bc1b52c495c850f282b5d8639b8",
+      "Name": "Результат выполнения",
+      "Type": "string",
+      "InitialValue": "В проекте отсутствуют требуемые для настройки фильтры: \"Конструкции не <Раздел>\", \"Арм Комплект не <Раздел>\"",
+      "Description": "Визуализация входного элемента узла."
+    }
+  ],
+  "Nodes": [
+    {
+      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
+      "NodeType": "PythonScriptNode",
+      "Code": "import clr\r\nclr.AddReference(\"RevitNodes\")\r\nimport Revit\r\nclr.ImportExtensions(Revit.Elements)\r\n\r\nclr.AddReference('RevitAPI')\r\nfrom Autodesk.Revit.DB import *\r\nfrom System.Collections.Generic import *\r\n\r\nclr.AddReference(\"RevitServices\")\r\nimport RevitServices\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\n\r\nchapter_name = IN[0]\r\n\r\nTransactionManager.Instance.EnsureInTransaction(doc)\r\n\r\n## Коллекторы фильтров и параметров\r\nall_filters = FilteredElementCollector(doc).OfClass(FilterElement).ToElements()\r\nall_parameters = FilteredElementCollector(doc).OfClass(ParameterElement).ToElements()\r\n\r\n## Выборка необходимых параметров для настройки фильтров\r\ntry:\r\n\tfor param in all_parameters:\r\n\t\tif \"Мрк.МаркаКонструкции\" == param.Name:\r\n\t\t\tmark_con_id = param.Id\r\n\t\tif \"Арм.ВыполненаСемейством\" == param.Name:\r\n\t\t\trebar_created_id = param.Id\r\n\r\n\tmark = ParameterValueProvider(ElementId(BuiltInParameter.ALL_MODEL_MARK))\r\n\tmark_con = ParameterValueProvider(mark_con_id)\r\n\trebar_created = ParameterValueProvider(rebar_created_id)\r\n\trebar_host = ParameterValueProvider(ElementId(BuiltInParameter.REBAR_ELEM_HOST_MARK))\r\nexcept:\r\n\tOUT = \"В проекте отсутствуют один или несколько необходимых параметров для настройки фильтров\"\r\n\r\nTransactionManager.Instance.EnsureInTransaction(doc)\r\ntry:\r\n## Выборка набора требуемых фильтров\r\n\tfor filter in all_filters:\r\n\t\tif \"Конструкции не КЖ\" in filter.Name and filter.Name != \"Конструкции не КЖ0.1.2\":\r\n\t\t\tstructure_filter = filter\r\n\t\tif \"Арм Комплект не КЖ\" in filter.Name and filter.Name != \"Арм Комплект не КЖ0.1.2\":\r\n\t\t\tchapter_filter = filter\r\n\r\n## Переименование фильтров по разделам\r\n\tstructure_filter.Name = structure_filter.Name[:14] + \" \" + chapter_name\r\n\tchapter_filter.Name = chapter_filter.Name[:15] + \" \" + chapter_name\r\n\t\r\n## Настройка фильтра \"Конструкции не...\"\r\n\tstructure_filter_markrules = FilterStringRule(mark, FilterStringContains(), \"-\" + chapter_name[2:] + \"-\", False)\r\n\tstructure_filter_markrules = FilterInverseRule(structure_filter_markrules)\r\n\tstructure_filter_element = ElementParameterFilter(structure_filter_markrules)\r\n\tstructure_filter = structure_filter.SetElementFilter(structure_filter_element)\r\n\r\n## Настройка фильтра \"Арм Комплект не...\"\r\n# Создание правил проверок первого набора\r\n\tchapter_filter_rebarcreatedrules_set01 = FilterIntegerRule(rebar_created, FilterNumericEquals(), 0)\r\n\tchapter_filter_rebarhostrules_set01 = FilterStringRule(rebar_host, FilterStringContains(), \"-\" + chapter_name[2:] + \"-\", False)\r\n\tchapter_filter_rebarhostrules_set01 = FilterInverseRule(chapter_filter_rebarhostrules_set01)\r\n# Создание первого набора из правил проверок\r\n\tchapter_filter_rules_set01 = []\r\n\tchapter_filter_rules_set01.Add(ElementParameterFilter(chapter_filter_rebarcreatedrules_set01))\r\n\tchapter_filter_rules_set01.Add(ElementParameterFilter(chapter_filter_rebarhostrules_set01))\r\n\r\n\tiCollect_chapter_filter_rules_set01 = List[ElementFilter](chapter_filter_rules_set01)\r\n\tchapter_filter_element_set01 = LogicalAndFilter(iCollect_chapter_filter_rules_set01)\r\n# Создание правил проверок второго набора\r\n\tchapter_filter_rebarcreatedrules_set02 = FilterIntegerRule(rebar_created, FilterNumericEquals(), 1)\r\n\tchapter_filter_markconrules_set02 = FilterStringRule(mark_con, FilterStringContains(), \"-\" + chapter_name[2:] + \"-\", False)\r\n\tchapter_filter_markconrules_set02 = FilterInverseRule(chapter_filter_markconrules_set02)\r\n# Создание второго набора из правил проверок\r\n\tchapter_filter_rules_set02 = []\r\n\tchapter_filter_rules_set02.Add(ElementParameterFilter(chapter_filter_rebarcreatedrules_set02))\r\n\tchapter_filter_rules_set02.Add(ElementParameterFilter(chapter_filter_markconrules_set02))\r\n\r\n\tiCollect_chapter_filter_rules_set02 = List[ElementFilter](chapter_filter_rules_set02)\r\n\tchapter_filter_element_set02 = LogicalAndFilter(iCollect_chapter_filter_rules_set02)\r\n# Объединение первого и второго набора проверок\r\n\tchapter_filter_setsrules = []\r\n\tchapter_filter_setsrules.Add(chapter_filter_element_set01)\r\n\tchapter_filter_setsrules.Add(chapter_filter_element_set02)\r\n\r\n\tiCollect_chapter_filter_setsrules = List[ElementFilter](chapter_filter_setsrules)\r\n\tchapter_filter_element = LogicalOrFilter(iCollect_chapter_filter_setsrules)\r\n# Назначение набора фильтрав самому фильтру\r\n\tchapter_filter = chapter_filter.SetElementFilter(chapter_filter_element)\r\n\tout = \"Фильтры \\\"Конструкции не КЖ\" + chapter_name[2:] + \"\\\" и \" + \"\\\"Арм Комплект не КЖ\\\"\" + chapter_name[2:] + \" настроены!\"\r\n\tOUT = out\r\nexcept:\r\n\tOUT = \"В проекте отсутствуют требуемые для настройки фильтры: \\\"Конструкции не <Раздел>\\\", \\\"Арм Комплект не <Раздел>\\\"\"\r\n\r\nTransactionManager.Instance.TransactionTaskDone()\r\n",
+      "VariableInputPorts": true,
+      "Id": "f0ce2ecc2f9146c89871f9c328fc547b",
+      "Inputs": [
+        {
+          "Id": "aa56b9acfb3a443bbca23a2fc8610b5f",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "433c9f691e7f458d8dede8b7bbbb2eeb",
+          "Name": "OUT",
+          "Description": "Результат сценария Python",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Выполнение встроенного сценария IronPython."
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Input.StringInput, CoreNodeModels",
+      "NodeType": "StringInputNode",
+      "InputValue": "КЖ6",
+      "Id": "e844cf2d7cc94106a71f5961863b2be3",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "092993570508442fa4ef525a291901d1",
+          "Name": "",
+          "Description": "String",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Создание строки."
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Watch, CoreNodeModels",
+      "NodeType": "ExtensionNode",
+      "Id": "ecf80bc1b52c495c850f282b5d8639b8",
+      "Inputs": [
+        {
+          "Id": "00fa28c2ce06467d9178d90a953cf20d",
+          "Name": "",
+          "Description": "Узел для оценки.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "8a9b2f62ba964c4aae05e15b5486e665",
+          "Name": "",
+          "Description": "Просмотр содержимого.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Визуализация входного элемента узла."
+    }
+  ],
+  "Connectors": [
+    {
+      "Start": "433c9f691e7f458d8dede8b7bbbb2eeb",
+      "End": "00fa28c2ce06467d9178d90a953cf20d",
+      "Id": "692668bf272c4b889a3af290d2e3eee2"
+    },
+    {
+      "Start": "092993570508442fa4ef525a291901d1",
+      "End": "aa56b9acfb3a443bbca23a2fc8610b5f",
+      "Id": "a043dfb9d1484de2ac40b999ef3fe613"
+    }
+  ],
+  "Dependencies": [],
+  "NodeLibraryDependencies": [],
+  "Bindings": [],
+  "View": {
+    "Dynamo": {
+      "ScaleFactor": 1.0,
+      "HasRunWithoutCrash": true,
+      "IsVisibleInDynamoLibrary": true,
+      "Version": "2.3.1.11775",
+      "RunType": "Manual",
+      "RunPeriod": "1000"
+    },
+    "Camera": {
+      "Name": "Фоновый просмотр",
+      "EyeX": -17.0,
+      "EyeY": 24.0,
+      "EyeZ": 50.0,
+      "LookX": 12.0,
+      "LookY": -13.0,
+      "LookZ": -58.0,
+      "UpX": 0.0,
+      "UpY": 1.0,
+      "UpZ": 0.0
+    },
+    "NodeViews": [
+      {
+        "ShowGeometry": true,
+        "Name": "Python Script",
+        "Id": "f0ce2ecc2f9146c89871f9c328fc547b",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": -111.6271248379569,
+        "Y": 266.45265021098191
+      },
+      {
+        "ShowGeometry": true,
+        "Name": "Введите имя раздела",
+        "Id": "e844cf2d7cc94106a71f5961863b2be3",
+        "IsSetAsInput": true,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": -300.17966402047466,
+        "Y": 334.30892770491943
+      },
+      {
+        "ShowGeometry": true,
+        "Name": "Результат выполнения",
+        "Id": "ecf80bc1b52c495c850f282b5d8639b8",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": true,
+        "Excluded": false,
+        "X": 175.15977467851508,
+        "Y": 369.56757961841441
+      }
+    ],
+    "Annotations": [],
+    "X": -17.586152993025109,
+    "Y": -92.715550388748682,
+    "Zoom": 0.88057930983447319
+  }
+}
