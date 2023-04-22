@@ -1,0 +1,273 @@
+{
+  "Uuid": "9184e274-54a8-4039-9349-78853d59c182",
+  "IsCustomNode": false,
+  "Description": null,
+  "Name": "Дубли уровней_Перепривязка элементов",
+  "ElementResolver": {
+    "ResolutionMap": {
+      "Elements.Element": {
+        "Key": "Revit.Elements.Element",
+        "Value": "RevitNodes.dll"
+      },
+      "Revit.Elements.Element": {
+        "Key": "Revit.Elements.Element",
+        "Value": "RevitNodes.dll"
+      }
+    }
+  },
+  "Inputs": [],
+  "Outputs": [
+    {
+      "Id": "8c4e9a8d13ec46059cfa143bbe8863b7",
+      "Name": "Результат выполнения",
+      "Type": "unknown",
+      "InitialValue": "",
+      "Description": "Визуализация входного элемента узла."
+    }
+  ],
+  "Nodes": [
+    {
+      "ConcreteType": "DSRevitNodesUI.ElementsAtLevel, DSRevitNodesUI",
+      "NodeType": "ExtensionNode",
+      "Id": "f93fa11aa2bf491cbd68c51a833e6aa2",
+      "Inputs": [
+        {
+          "Id": "2c5cd626e62d46ed8c77d4f1ef22f255",
+          "Name": "Level",
+          "Description": "Уровень",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "dc96c48a15fa46cfbb540d2d030b08b2",
+          "Name": "Elements",
+          "Description": "Элементы на заданной отметке.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Получение всех элементов, расположенных в модели на указанной отметке."
+    },
+    {
+      "ConcreteType": "DSRevitNodesUI.Levels, DSRevitNodesUI",
+      "SelectedIndex": 0,
+      "SelectedString": "777",
+      "NodeType": "ExtensionNode",
+      "Id": "aafc387b1eab44229f41c2584c9bb316",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "b4af3378a5b34b39a069cdeb20928eca",
+          "Name": "Levels",
+          "Description": "Выбрано Levels",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Выберите уровень в активном документе"
+    },
+    {
+      "ConcreteType": "DSRevitNodesUI.Levels, DSRevitNodesUI",
+      "SelectedIndex": 1,
+      "SelectedString": "КР_-3.300_-1этаж",
+      "NodeType": "ExtensionNode",
+      "Id": "e8b9e58c27b14f7fb1357ba0e02bdd25",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "2eae92cbdbf740e98613d861fb9cb27f",
+          "Name": "Levels",
+          "Description": "Выбрано Levels",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Выберите уровень в активном документе"
+    },
+    {
+      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
+      "NodeType": "PythonScriptNode",
+      "Code": "import System\r\nimport clr\r\nclr.AddReference(\"RevitNodes\")\r\nimport Revit\r\nclr.ImportExtensions(Revit.Elements)\r\n\r\nclr.AddReference('RevitAPI')\r\nfrom Autodesk.Revit.DB import *\r\nfrom System.Collections.Generic import *\r\n\r\n\r\nclr.AddReference(\"RevitServices\")\r\nimport RevitServices\r\nfrom RevitServices.Persistence import DocumentManager\r\nfrom RevitServices.Transactions import TransactionManager\r\n\r\ndoc = DocumentManager.Instance.CurrentDBDocument\r\n\r\nelements = UnwrapElement(IN[0])\r\nref_level = UnwrapElement(IN[1])\r\n\r\ndef get_level_parameter(element):\r\n\tif element.Category.Name == \"Крыши\":\r\n\t\tlevel_paramater = element.get_Parameter(BuiltInParameter.ROOF_BASE_LEVEL_PARAM)\r\n\tif element.Category.Name == \"Обобщенные модели\" or element.Category.Name == \"Каркас несущий\" or element.Category.Name == \"Несущая арматура\" or element.Category.Name == \"Окна\" or element.Category.Name == \"Соединения несущих конструкций\":\r\n\t\tlevel_paramater = element.get_Parameter(BuiltInParameter.FAMILY_LEVEL_PARAM)\r\n\tif element.Category.Name == \"Несущие колонны\":\r\n\t\tlevel_paramater = element.get_Parameter(BuiltInParameter.FAMILY_BASE_LEVEL_PARAM)\r\n\t\tif level_paramater == None:\r\n\t\t\tlevel_paramater = element.get_Parameter(BuiltInParameter.FAMILY_LEVEL_PARAM)\r\n\tif element.Category.Name == \"Перекрытия\":\r\n\t\tlevel_paramater = element.get_Parameter(BuiltInParameter.LEVEL_PARAM)\r\n\tif element.Category.Name == \"Фундамент несущей конструкции\":\r\n\t\tlevel_paramater = element.get_Parameter(BuiltInParameter.LEVEL_PARAM)\r\n\t\tif level_paramater == None:\r\n\t\t\tlevel_paramater = element.get_Parameter(BuiltInParameter.FAMILY_LEVEL_PARAM)\r\n\tif element.Category.Name == \"Стены\":\r\n\t\tlevel_paramater = element.get_Parameter(BuiltInParameter.WALL_BASE_CONSTRAINT)\r\n\tif element.Category.Name == \"Лестницы\":\r\n\t\tlevel_paramater = element.get_Parameter(BuiltInParameter.STAIRS_BASE_LEVEL_PARAM)\r\n\tif element.Category.Name == \"Группы модели\":\r\n\t\tlevel_paramater = element.get_Parameter(BuiltInParameter.GROUP_LEVEL)\r\n\treturn level_paramater\r\n\r\nTransactionManager.Instance.EnsureInTransaction(doc)\r\n\r\ncount = 0\r\nfor el in elements:\r\n\tif el.GroupId == ElementId(-1):\r\n\t\tif (el.GetType()).Name == \"FamilyInstance\":\r\n\t\t\tif el.SuperComponent == None:\r\n\t\t\t\tlev_el = get_level_parameter(el).Set(ref_level.Id)\r\n\t\t\t\tcount += 1\r\n\t\telse:\r\n\t\t\tlev_el = get_level_parameter(el).Set(ref_level.Id)\r\n\t\t\tcount += 1\r\n\r\nTransactionManager.Instance.TransactionTaskDone()\r\n\r\nout = str(count) + \" элементов обработано\"\r\nOUT = out",
+      "VariableInputPorts": true,
+      "Id": "44ecf41c086c41e092df9c3361bba470",
+      "Inputs": [
+        {
+          "Id": "36e08b12c34449bda8a7c796f66cbfa1",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "12745a06f55d45d1b7eba53a3d037356",
+          "Name": "IN[1]",
+          "Description": "Input #1",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "a753d9176bac4a2cbdf1482dae20b9f8",
+          "Name": "OUT",
+          "Description": "Результат сценария Python",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Выполнение встроенного сценария IronPython."
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Watch, CoreNodeModels",
+      "NodeType": "ExtensionNode",
+      "Id": "8c4e9a8d13ec46059cfa143bbe8863b7",
+      "Inputs": [
+        {
+          "Id": "ab4cbed56e524c8cad1f2314ae82eebd",
+          "Name": "",
+          "Description": "Узел для оценки.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "0b60e876b83646e7952dbe1617b9ebf4",
+          "Name": "",
+          "Description": "Просмотр содержимого.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Визуализация входного элемента узла."
+    }
+  ],
+  "Connectors": [
+    {
+      "Start": "dc96c48a15fa46cfbb540d2d030b08b2",
+      "End": "36e08b12c34449bda8a7c796f66cbfa1",
+      "Id": "ae46ff99c67f47ba96358437210db3be"
+    },
+    {
+      "Start": "b4af3378a5b34b39a069cdeb20928eca",
+      "End": "2c5cd626e62d46ed8c77d4f1ef22f255",
+      "Id": "f40f5017a41a47a888c9f5a21f23bb27"
+    },
+    {
+      "Start": "2eae92cbdbf740e98613d861fb9cb27f",
+      "End": "12745a06f55d45d1b7eba53a3d037356",
+      "Id": "a11d9f2a468c44a0815749266f27a6f5"
+    },
+    {
+      "Start": "a753d9176bac4a2cbdf1482dae20b9f8",
+      "End": "ab4cbed56e524c8cad1f2314ae82eebd",
+      "Id": "8e0fe5fc533a4b548a7e11a4f47e75fe"
+    }
+  ],
+  "Dependencies": [],
+  "NodeLibraryDependencies": [],
+  "Bindings": [],
+  "View": {
+    "Dynamo": {
+      "ScaleFactor": 1.0,
+      "HasRunWithoutCrash": true,
+      "IsVisibleInDynamoLibrary": true,
+      "Version": "2.3.1.11775",
+      "RunType": "Manual",
+      "RunPeriod": "1000"
+    },
+    "Camera": {
+      "Name": "Фоновый просмотр",
+      "EyeX": -26674.003453748162,
+      "EyeY": 28902.420408227175,
+      "EyeZ": 128892.18335978266,
+      "LookX": 26669.003453748162,
+      "LookY": -28891.420408227175,
+      "LookZ": -128900.18335978266,
+      "UpX": 0.0,
+      "UpY": 1.0,
+      "UpZ": 0.0
+    },
+    "NodeViews": [
+      {
+        "ShowGeometry": true,
+        "Name": "All Elements at Level",
+        "Id": "f93fa11aa2bf491cbd68c51a833e6aa2",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 716.14324518703086,
+        "Y": 389.81184986861422
+      },
+      {
+        "ShowGeometry": true,
+        "Name": "Выберите исходный уровень",
+        "Id": "aafc387b1eab44229f41c2584c9bb316",
+        "IsSetAsInput": true,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 479.99525370590521,
+        "Y": 390.87841992086652
+      },
+      {
+        "ShowGeometry": true,
+        "Name": "Выберите новый уровень",
+        "Id": "e8b9e58c27b14f7fb1357ba0e02bdd25",
+        "IsSetAsInput": true,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 688.93117564405554,
+        "Y": 489.54334244174197
+      },
+      {
+        "ShowGeometry": true,
+        "Name": "Python Script",
+        "Id": "44ecf41c086c41e092df9c3361bba470",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 920.55815819177769,
+        "Y": 427.88607531098785
+      },
+      {
+        "ShowGeometry": true,
+        "Name": "Результат выполнения",
+        "Id": "8c4e9a8d13ec46059cfa143bbe8863b7",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": true,
+        "Excluded": false,
+        "X": 1088.2730420859143,
+        "Y": 430.21594951083466
+      }
+    ],
+    "Annotations": [],
+    "X": -669.28475578435848,
+    "Y": -456.75930994481013,
+    "Zoom": 1.7764348401685757
+  }
+}
